@@ -1,0 +1,146 @@
+//-----------------------------------------------------------------------------------------------------------------
+//  This is a simple orb class that was used in a mobile game. The point of the game was to collect these orbs    -
+// to earn points.                                                                                                -
+// Nicholas Mallonee                                                                                              -
+// Unreal Engine 4.7.6
+//-----------------------------------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------------------------------------------
+// Pragmas, defines, typedefs																                                                      -
+//-----------------------------------------------------------------------------------------------------------------
+#pragma once
+
+//-----------------------------------------------------------------------------------------------------------------
+// Libraries and includes 																	                                                      -
+//-----------------------------------------------------------------------------------------------------------------
+#include "GameFramework/Actor.h"
+#include "Orb.generated.h"
+
+//-----------------------------------------------------------------------------------------------------------------
+// Enum Orb States																								                                                -
+//-----------------------------------------------------------------------------------------------------------------
+UENUM()
+enum class EOrbState : uint8    
+{															 
+	Falling,                                // Falling state / Base state
+	Caught,                                 // Player Caught state
+	Missed,                                 // Player Missed State
+	Removal                                 // Flagged for removal state(NULL state)
+};
+
+//-----------------------------------------------------------------------------------------------------------------
+// Struct																										                                                      -
+//-----------------------------------------------------------------------------------------------------------------
+USTRUCT(BlueprintType)
+struct FOrbBase
+{
+	GENERATED_USTRUCT_BODY()
+
+		// -- Struct information 
+private:
+	UPROPERTY()
+	int32 points;
+
+	UPROPERTY()
+	EOrbState state;
+
+	// -- Accessors and Mutators / Other Methods
+public:
+	/*
+	 * Returns the points worth of this orb.
+	 * @Return the int32 value of this object.	 
+	 */
+	int32 getPoints()
+	{
+		return points;
+	}
+
+	/*
+	* Returns the current state of this object.
+	* @Return the enum state of this object. 
+	*/
+	EOrbState getState()
+	{
+		return state;
+	}
+
+	/*
+	* Allows outside access to set the worth of this object
+	* @Param the int32 value of what the orb should be worth 
+	*/
+	void setPoints(int32 p)
+	{
+		points = p;
+	}
+
+	/*
+	* Allows outside access to set the state of the orb.
+	* If the player catches the orb, the player will
+	* set the orb state to caught. 
+	* @Param the state that orb should be set to. 
+	*/
+	void setState(EOrbState s)
+	{
+		state = s;
+	}
+
+	/*
+	 * Destroys the object and any custome datatypes.
+	 * @Return void method. 
+	 */
+	void Destroy()
+	{
+	}
+
+	// -- Base Constructor 
+	FOrbBase()
+	{
+		points = 10;
+		state = EOrbState::Falling;
+	}
+};
+
+//-----------------------------------------------------------------------------------------------------------------
+// Class Information																							                                                -
+//-----------------------------------------------------------------------------------------------------------------
+UCLASS()
+class BERYL_API AOrb : public AActor
+{
+	GENERATED_BODY()
+	
+	// -- Public Infromation -- Engine Events and Constructors -- //
+public:	
+	AOrb();                                                                 // Default Constructor
+
+	virtual void BeginPlay() override;                                      // Begin Play Event 
+	
+	virtual void Tick( float DeltaSeconds ) override;                       // Frame Tick Event 
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;// End Play Event 
+
+	// -- Public Information -- Container Interaction Methods -- // 
+public:
+	void setOrbState(EOrbState e);                                          // Allows an outside force to set state
+
+	void setOrbWorth(int32 w);                                               // Returns the orbs worth 
+
+	EOrbState getOrbState();                                                // Returns the orbs state
+
+	int32 getPoints();                                                      // returns the orbs points 
+
+	// -- Public Information -- Orb State Change -- //
+public:
+	void setOrbCaught();                                                    // Allows an object to register the orb as caught
+
+	void setOrbMissed();                                                    // Allows an object to register the orb as missed
+
+	// -- Private Information -- Struct Removal and creation -- // 
+private:
+	void createOrbInformation();                                            // Creates the default orb state and information
+
+	void removeOrbInformation();                                            // Removes the orbs data and custom data types
+
+	// -- Private Inforamtion -- Class Containers and values -- //
+private:
+	FOrbBase orbInformation;	                                              // The variable for this orbs information 
+};
