@@ -1,0 +1,120 @@
+//-----------------------------------------------------------------------------------------------------------------
+//  This is a simple orb class that was used in a mobile game. The point of the game was to collect these orbs    -
+// to earn points.                                                                                                -
+// Nicholas Mallonee                                                                                              -
+// Unreal Engine 4.7.6                                                                                            -
+//-----------------------------------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------------------------------------------
+// Libraries and Includes                                       																								  -
+//-----------------------------------------------------------------------------------------------------------------
+#include "Beryl.h"
+#include "Engine.h"
+#include "Orb.h"
+
+
+//-----------------------------------------------------------------------------------------------------------------
+// Constructors 																							                                                	  -
+//-----------------------------------------------------------------------------------------------------------------
+AOrb::AOrb()
+{
+  // Do not allow this actor to tick. 
+ 	PrimaryActorTick.bCanEverTick = false;
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+// Engine Events 																							                                                	  -
+//-----------------------------------------------------------------------------------------------------------------
+void AOrb::BeginPlay()
+{
+	Super::BeginPlay();
+
+  // Create the basic orb information 
+	createOrbInformation();	
+}
+
+void AOrb::Tick( float DeltaTime )
+{
+	Super::Tick( DeltaTime );
+	
+	// There doesnt seem to be anything here...
+
+}
+
+void AOrb::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+  // Destroy the orb information, the k2 method will force call the end play method
+	orbInformation.Destroy();										
+	}
+
+//-----------------------------------------------------------------------------------------------------------------
+// Struct Creation and Destruction																				  -
+//-----------------------------------------------------------------------------------------------------------------
+void AOrb::createOrbInformation()
+{
+  // Set a random point worth 
+	orbInformation.setPoints(FMath::RandRange(1, 10));
+	
+	// Set the state to falling 
+	orbInformation.setState(EOrbState::Falling);
+}
+
+void AOrb::removeOrbInformation()
+{
+  // Hide the mesh -- Which is set in the blueprint
+  // Allows the artist to change it out, till the design
+  // is final. 
+	this->RootComponent->SetHiddenInGame(true);
+	
+	// Force destroy the actor, calls the end play event. 
+	this->K2_DestroyActor(); 
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+// Container Interaction Methods																				                                          -
+//-----------------------------------------------------------------------------------------------------------------
+void AOrb::setOrbState(EOrbState e)
+{
+	orbInformation.setState(e);
+}
+
+void AOrb::setOrbWorth(int32 w)
+{
+	orbInformation.setPoints(w);
+}
+
+EOrbState AOrb::getOrbState()
+{
+	return orbInformation.getState();
+}
+
+int32 AOrb::getPoints()
+{
+	return orbInformation.getPoints();
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+// Orb State Change																								                                                -
+//-----------------------------------------------------------------------------------------------------------------
+void AOrb::setOrbCaught()                                  // If the player touches the orb, this is called
+{
+	orbInformation.setState(EOrbState::Caught);              // Set the state to caught 
+	
+	orbInformation.setPoints(0);                             // The player will get the points on overlap, 
+	                                                         // so set to 0 to not allow for more points. 
+	                                                         
+	this->removeOrbInformation();                            // Remove the orb information and delete it from the world.
+}
+
+void AOrb::setOrbMissed()                                  // If the orb hits the ground, this is called
+{
+	orbInformation.setState(EOrbState::Missed);              // Flag the orb as missed, the floor contact the gamestate
+	                                                         // to reduce the player life by 1 
+	                                                         
+	orbInformation.setPoints(0);                             // Set the points to 0, so the player can not get any, if they
+	                                                         // touch it before it is deleted.
+	                                                         
+	this->removeOrbInformation();                            // Remove the orb information. 
+}
