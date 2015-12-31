@@ -1,0 +1,152 @@
+//-----------------------------------------------------------------------------------------------------------------
+// This is the orb example class that has been found in other directories inside of this git-hub depo.  In this   -
+// Example it simply shows that the actor and its struct information has been replicated over the network. For    -
+// Method replication(RPC replication), see the Simple Method Replication Directory.                              -
+//                                                                                                                -
+// This example shows that when the orb spawns into the world. It will set a random value to the points for the   -
+// object in the server and display its value to all users.                                                       -
+//                                                                                                                -
+// Nicholas Mallonee                                                                                              -
+// Unreal 4.7.6                                                                                                   -
+//-----------------------------------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------------------------------------------
+// Pragma's and Defines																						                                                -
+//-----------------------------------------------------------------------------------------------------------------
+#pragma once
+
+//-----------------------------------------------------------------------------------------------------------------
+// Libraries and Includes																					                                                -
+//-----------------------------------------------------------------------------------------------------------------
+#include "GameFramework/Actor.h"
+#include "Orb.generated.h"
+
+//-----------------------------------------------------------------------------------------------------------------
+// Enum Orb States																								                                                -
+//-----------------------------------------------------------------------------------------------------------------
+UENUM()
+enum class EOrbState : uint8
+{															// Holds the current state of the orb itself. 
+	Falling,
+	Caught,
+	Missed,
+	Removal
+};
+
+//-----------------------------------------------------------------------------------------------------------------
+// Struct																										                                                      -
+//-----------------------------------------------------------------------------------------------------------------
+USTRUCT()
+struct FOrbBase
+{
+	GENERATED_USTRUCT_BODY()
+
+		// -- Struct information 
+private:
+	UPROPERTY()
+	int32 points;
+
+	UPROPERTY()
+	EOrbState state;
+
+	// -- Accessors and Mutators / Other Methods
+public:
+	/*
+	 * Returns the points worth of this orb.
+	 * @Return the int32 value of this object.	 
+	 */
+	int32 getPoints()
+	{
+		return points;
+	}
+
+	/*
+	* Returns the current state of this object.
+	* @Return the enum state of this object. 
+	*/
+	EOrbState getState()
+	{
+		return state;
+	}
+
+	/*
+	* Allows outside access to set the worth of this object
+	* @Param the int32 value of what the orb should be worth 
+	*/
+	void setPoints(int32 p)
+	{
+		points = p;
+	}
+
+	/*
+	* Allows outside access to set the state of the orb.
+	* If the player catches the orb, the player will
+	* set the orb state to caught. 
+	* @Param the state that orb should be set to. 
+	*/
+	void setState(EOrbState s)
+	{
+		state = s;
+	}
+
+	/*
+	 * Destroys the object and any custome datatypes.
+	 * @Return void method. 
+	 */
+	void Destroy()
+	{
+	}
+
+	// -- Base Constructor 
+	FOrbBase()
+	{
+		points = 10;
+		state = EOrbState::Falling;
+	}
+};
+
+//-----------------------------------------------------------------------------------------------------------------
+// Class Information																							                                                -
+//-----------------------------------------------------------------------------------------------------------------
+UCLASS()
+class BERYL_API AOrb : public AActor
+{
+	GENERATED_BODY()
+	
+	// -- Public Infromation -- Engine Events and Constructors -- //
+public:	
+	AOrb();
+
+	virtual void BeginPlay() override;
+	
+	virtual void Tick( float DeltaSeconds ) override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	// -- Public Information -- Container Interaction Methods -- // 
+public:
+	void setOrbState(EOrbState e);
+
+	void setOrbWorth(int32 w);
+
+	EOrbState getOrbState();
+
+	int32 getPoints();
+
+	// -- Public Information -- Orb State Change -- //
+public:
+	void setOrbCaught();
+
+	void setOrbMissed();
+
+	// -- Private Information -- Struct Removal and creation -- // 
+private:
+	void createOrbInformation();
+
+	void removeOrbInformation();
+
+	// -- Private Inforamtion -- Class Containers and values -- //
+private:
+	UPROPERTY(replicated)
+	FOrbBase orbInformation;	
+};
