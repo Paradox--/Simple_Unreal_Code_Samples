@@ -1,0 +1,132 @@
+//-----------------------------------------------------------------------------------------------------------------
+// This is the orb example class that has been found in other directories inside of this git-hub depo.  In this   -
+// Example it simply shows that the actor and its struct information has been replicated over the network. For    -
+// Method replication(RPC replication), see the Simple Method Replication Directory.                              -
+//                                                                                                                -
+// This example shows that when the orb spawns into the world. It will set a random value to the points for the   -
+// object in the server and display its value to all users.                                                       -
+//                                                                                                                -
+// Nicholas Mallonee                                                                                              -
+// Unreal 4.7.6                                                                                                   -
+//-----------------------------------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------------------------------------------
+// Libraries and includes																				                                                  -
+//-----------------------------------------------------------------------------------------------------------------
+#include "Beryl.h"
+#include "Engine.h"
+#include "UnrealNetwork.h"
+#include "Orb.h"
+
+//-----------------------------------------------------------------------------------------------------------------
+// Constructors 																								                                                  -
+//-----------------------------------------------------------------------------------------------------------------
+AOrb::AOrb()
+{
+	// actor does not need to tick 
+ 	PrimaryActorTick.bCanEverTick = false;
+
+	// allow this actor to replicate
+	bReplicates = true;
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+// Engine Events 																								                                                  -
+//-----------------------------------------------------------------------------------------------------------------
+void AOrb::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// if this actor role is equal to that of the server. 
+	// replicate the creation of the of the information 
+	if (Role == ROLE_Authority)
+	{
+		createOrbInformation();
+	}		
+}
+
+void AOrb::Tick( float DeltaTime )
+{
+	Super::Tick( DeltaTime );
+
+}
+
+void AOrb::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	orbInformation.Destroy();											// Destroy the information
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+// Struct Creation and Destruction																				                                        -
+//-----------------------------------------------------------------------------------------------------------------
+void AOrb::createOrbInformation()
+{
+	orbInformation.setPoints(FMath::RandRange(1, 10));
+	orbInformation.setState(EOrbState::Falling);
+	
+	// ** Debug Check ** //
+	//  Link to proof image: http://imgur.com/eo8e39t
+	// Uncomment to show that the struct
+	// is being replicated properly and only once. 
+	//FString temp = FString::FromInt(orbInformation.getPoints());
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Orb Worth Set to: ") + temp);
+}
+
+void AOrb::removeOrbInformation()
+{
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Removing Orb"));
+	
+	this->RootComponent->SetHiddenInGame(true);
+	this->K2_DestroyActor(); 
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+// Container Interaction Methods																				                                          -
+//-----------------------------------------------------------------------------------------------------------------
+void AOrb::setOrbState(EOrbState e)
+{
+	orbInformation.setState(e);
+}
+
+void AOrb::setOrbWorth(int32 w)
+{
+	orbInformation.setPoints(w);
+}
+
+EOrbState AOrb::getOrbState()
+{
+	return orbInformation.getState();
+}
+
+int32 AOrb::getPoints()
+{
+	return orbInformation.getPoints();
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+// Orb State Change																								                                                -
+//-----------------------------------------------------------------------------------------------------------------
+void AOrb::setOrbCaught()
+{
+	orbInformation.setState(EOrbState::Caught);
+	orbInformation.setPoints(0);
+	this->removeOrbInformation();
+}
+
+void AOrb::setOrbMissed()
+{
+	orbInformation.setState(EOrbState::Missed);
+	orbInformation.setPoints(0);
+	this->removeOrbInformation();
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+// Orb Replication																								                                                -
+//-----------------------------------------------------------------------------------------------------------------
+void AOrb::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	// Replicate the orb information for the lifetime of this object
+	DOREPLIFETIME(AOrb, orbInformation);
+}
